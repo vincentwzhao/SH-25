@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SFU Peer Carpool Matching</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    
+    .header h1 {
+      color: #2c3e50;
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #7f8c8d;
+      font-size: 1.1em;
+    }
+    
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .card h2 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      font-size: 1.5em;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ecf0f1;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+    
+    .btn {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin: 5px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, #27ae60, #229954);
+    }
+    
+    .btn-warning {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+    
+    .matches-container {
+      grid-column: 1 / -1;
+    }
+    
+    .match-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      border-left: 4px solid #3498db;
+      transition: all 0.3s ease;
+    }
+    
+    .match-card:hover {
+      transform: translateX(5px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .match-card.high-compatibility {
+      border-left-color: #27ae60;
+    }
+    
+    .match-card.medium-compatibility {
+      border-left-color: #f39c12;
+    }
+    
+    .match-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .match-user {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 1.2em;
+    }
+    
+    .compatibility-score {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.9em;
+    }
+    
+    .match-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .detail-item {
+      display: flex;
+      align-items: center;
+    }
+    
+    .detail-item i {
+      margin-right: 8px;
+      color: #3498db;
+      width: 20px;
+    }
+    
+    .match-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .btn-small {
+      padding: 8px 16px;
+      font-size: 0.9em;
+    }
+    
+    .profile-section {
+      display: none;
+    }
+    
+    .profile-section.active {
+      display: block;
+    }
+    
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2em;
+      font-weight: bold;
+      margin: 0 auto 20px;
+    }
+    
+    .preferences-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    .preference-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    
+    .preference-item input[type="checkbox"] {
+      margin-right: 10px;
+      transform: scale(1.2);
+    }
+    
+    .chat-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 350px;
+      height: 500px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      display: none;
+      flex-direction: column;
+      z-index: 1000;
+    }
+    
+    .chat-header {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      padding: 15px;
+      border-radius: 15px 15px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      max-height: 350px;
+    }
+    
+    .message {
+      margin-bottom: 15px;
+      padding: 10px 15px;
+      border-radius: 15px;
+      max-width: 80%;
+    }
+    
+    .message.sent {
+      background: #3498db;
+      color: white;
+      margin-left: auto;
+    }
+    
+    .message.received {
+      background: #ecf0f1;
+      color: #2c3e50;
+    }
+    
+    .chat-input {
+      display: flex;
+      padding: 15px;
+      border-top: 1px solid #ecf0f1;
+    }
+    
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      margin-right: 10px;
+    }
+    
+    .offline-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #27ae60;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-weight: 600;
+      z-index: 1000;
+    }
+    
+    .offline-indicator.offline {
+      background: #e74c3c;
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 5px;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      color: #7f8c8d;
+    }
+    
+    .tab.active {
+      background: white;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+      
+      .match-details {
+        grid-template-columns: 1fr;
+      }
+      
+      .preferences-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .chat-container {
+        width: 90%;
+        height: 70%;
+        bottom: 10px;
+        right: 5%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-indicator" id="offlineIndicator">
+    📡 Online Mode
+  </div>
+  
+  <div class="container">
+    <div class="header">
+      <h1>🚗 SFU Peer Carpool Matching</h1>
+      <p>Connect with fellow SFU students for sustainable commuting</p>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('post')">Post Ride</div>
+      <div class="tab" onclick="switchTab('find')">Find Rides</div>
+      <div class="tab" onclick="switchTab('profile')">My Profile</div>
+      <div class="tab" onclick="switchTab('matches')">My Matches</div>
+    </div>
+    
+    <div class="main-content">
+      <!-- Post Ride Section -->
+      <div class="card" id="postRideSection">
+        <h2>🚗 Post a Ride</h2>
+        <form id="postRideForm">
+          <div class="form-group">
+            <label for="rideType">Ride Type</label>
+            <select id="rideType" required>
+              <option value="">Select ride type</option>
+              <option value="driver">I'm driving</option>
+              <option value="passenger">I need a ride</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="fromLocation">From</label>
+            <input type="text" id="fromLocation" placeholder="Starting location" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="toLocation">To</label>
+            <input type="text" id="toLocation" placeholder="Destination" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="departureTime">Departure Time</label>
+            <input type="datetime-local" id="departureTime" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="seatsAvailable">Seats Available</label>
+            <input type="number" id="seatsAvailable" min="1" max="8" value="1">
+          </div>
+          
+          <div class="form-group">
+            <label for="price">Price per person ($)</label>
+            <input type="number" id="price" min="0" step="0.50" placeholder="0.00">
+          </div>
+          
+          <div class="form-group">
+            <label for="notes">Additional Notes</label>
+            <textarea id="notes" rows="3" placeholder="Any special requirements or notes..."></textarea>
+          </div>
+          
+          <button type="submit" class="btn btn-success">Post Ride</button>
+        </form>
+      </div>
+      
+      <!-- Find Rides Section -->
+      <div class="card" id="findRidesSection" style="display: none;">
+        <h2>🔍 Find Rides</h2>
+        <form id="searchRidesForm">
+          <div class="form-group">
+            <label for="searchFrom">From</label>
+            <input type="text" id="searchFrom" placeholder="Starting location">
+          </div>
+          
+          <div class="form-group">
+            <label for="searchTo">To</label>
+            <input type="text" id="searchTo" placeholder="Destination">
+          </div>
+          
+          <div class="form-group">
+            <label for="searchDate">Date</label>
+            <input type="date" id="searchDate">
+          </div>
+          
+          <button type="submit" class="btn">Search Rides</button>
+        </form>
+        
+        <div id="searchResults" style="margin-top: 20px;">
+          <!-- Search results will be populated here -->
+        </div>
+      </div>
+      
+      <!-- Profile Section -->
+      <div class="card" id="profileSection" style="display: none;">
+        <h2>👤 My Profile</h2>
+        <form id="profileForm">
+          <div class="profile-avatar" id="profileAvatar">U</div>
+          
+          <div class="form-group">
+            <label for="userName">Full Name</label>
+            <input type="text" id="userName" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="userEmail">Email</label>
+            <input type="email" id="userEmail" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="userPhone">Phone Number</label>
+            <input type="tel" id="userPhone">
+          </div>
+          
+          <div class="form-group">
+            <label for="userYear">Academic Year</label>
+            <select id="userYear">
+              <option value="1st">1st Year</option>
+              <option value="2nd">2nd Year</option>
+              <option value="3rd">3rd Year</option>
+              <option value="4th">4th Year</option>
+              <option value="grad">Graduate</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Preferences</label>
+            <div class="preferences-grid">
+              <div class="preference-item">
+                <input type="checkbox" id="prefMusic" value="music">
+                <label for="prefMusic">Music allowed</label>
+              </div>
+              <div class="preference-item">
+                <input type="checkbox" id="prefSmoking" value="no-smoking">
+                <label for="prefSmoking">No smoking</label>
+              </div>
+              <div class="preference-item">
+                <input type="checkbox" id="prefPets" value="pets-ok">
+                <label for="prefPets">Pets allowed</label>
+              </div>
+              <div class="preference-item">
+                <input type="checkbox" id="prefChat" value="chatty">
+                <label for="prefChat">Chatty</label>
+              </div>
+              <div class="preference-item">
+                <input type="checkbox" id="prefQuiet" value="quiet">
+                <label for="prefQuiet">Quiet ride</label>
+              </div>
+              <div class="preference-item">
+                <input type="checkbox" id="prefFood" value="food-ok">
+                <label for="prefFood">Food allowed</label>
+              </div>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn">Save Profile</button>
+        </form>
+      </div>
+      
+      <!-- Matches Section -->
+      <div class="card matches-container" id="matchesSection" style="display: none;">
+        <h2>💕 My Matches</h2>
+        <div id="matchesList">
+          <!-- Matches will be populated here -->
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Chat Container -->
+  <div class="chat-container" id="chatContainer">
+    <div class="chat-header">
+      <span id="chatUserName">Chat</span>
+      <button class="btn btn-danger btn-small" onclick="closeChat()">✕</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <!-- Messages will be populated here -->
+    </div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Type a message...">
+      <button class="btn btn-small" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    // Carpool Matching System
+    class CarpoolMatching {
+      constructor() {
+        this.db = null;
+        this.currentUser = null;
+        this.matches = [];
+        this.rides = [];
+        this.messages = {};
+        this.init();
+      }
+      
+      async init() {
+        await this.initDB();
+        await this.loadUserData();
+        this.setupEventListeners();
+        this.updateOfflineIndicator();
+        this.startMatching();
+      }
+      
+      async initDB() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open('CarpoolDB', 1);
+          
+          request.onerror = () => reject(request.error);
+          request.onsuccess = () => {
+            this.db = request.result;
+            resolve();
+          };
+          
+          request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            
+            // Users store
+            if (!db.objectStoreNames.contains('users')) {
+              const userStore = db.createObjectStore('users', { keyPath: 'id' });
+              userStore.createIndex('email', 'email', { unique: true });
+            }
+            
+            // Rides store
+            if (!db.objectStoreNames.contains('rides')) {
+              const rideStore = db.createObjectStore('rides', { keyPath: 'id' });
+              rideStore.createIndex('userId', 'userId');
+              rideStore.createIndex('departureTime', 'departureTime');
+            }
+            
+            // Matches store
+            if (!db.objectStoreNames.contains('matches')) {
+              const matchStore = db.createObjectStore('matches', { keyPath: 'id' });
+              matchStore.createIndex('userId1', 'userId1');
+              matchStore.createIndex('userId2', 'userId2');
+            }
+            
+            // Messages store
+            if (!db.objectStoreNames.contains('messages')) {
+              const messageStore = db.createObjectStore('messages', { keyPath: 'id' });
+              messageStore.createIndex('matchId', 'matchId');
+              messageStore.createIndex('timestamp', 'timestamp');
+            }
+          };
+        });
+      }
+      
+      async loadUserData() {
+        const userData = localStorage.getItem('carpoolUser');
+        if (userData) {
+          this.currentUser = JSON.parse(userData);
+          this.updateProfileAvatar();
+        } else {
+          // Create demo user
+          this.currentUser = {
+            id: 'demo-user-' + Date.now(),
+            name: 'Demo User',
+            email: 'demo@sfu.ca',
+            phone: '',
+            year: '3rd',
+            preferences: ['music', 'no-smoking', 'chatty'],
+            avatar: 'U'
+          };
+          await this.saveUser(this.currentUser);
+        }
+      }
+      
+      setupEventListeners() {
+        // Form submissions
+        document.getElementById('postRideForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.postRide();
+        });
+        
+        document.getElementById('searchRidesForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.searchRides();
+        });
+        
+        document.getElementById('profileForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.saveProfile();
+        });
+        
+        // Chat input
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            this.sendMessage();
+          }
+        });
+        
+        // Online/offline detection
+        window.addEventListener('online', () => this.updateOfflineIndicator());
+        window.addEventListener('offline', () => this.updateOfflineIndicator());
+      }
+      
+      async postRide() {
+        const formData = new FormData(document.getElementById('postRideForm'));
+        const ride = {
+          id: 'ride-' + Date.now(),
+          userId: this.currentUser.id,
+          type: document.getElementById('rideType').value,
+          from: document.getElementById('fromLocation').value,
+          to: document.getElementById('toLocation').value,
+          departureTime: document.getElementById('departureTime').value,
+          seatsAvailable: parseInt(document.getElementById('seatsAvailable').value),
+          price: parseFloat(document.getElementById('price').value) || 0,
+          notes: document.getElementById('notes').value,
+          timestamp: new Date().toISOString(),
+          status: 'active'
+        };
+        
+        await this.saveRide(ride);
+        this.showNotification('Ride posted successfully!', 'success');
+        document.getElementById('postRideForm').reset();
+        this.startMatching();
+      }
+      
+      async searchRides() {
+        const from = document.getElementById('searchFrom').value.toLowerCase();
+        const to = document.getElementById('searchTo').value.toLowerCase();
+        const date = document.getElementById('searchDate').value;
+        
+        const allRides = await this.getAllRides();
+        const filteredRides = allRides.filter(ride => {
+          const matchesFrom = !from || ride.from.toLowerCase().includes(from);
+          const matchesTo = !to || ride.to.toLowerCase().includes(to);
+          const matchesDate = !date || ride.departureTime.startsWith(date);
+          const isNotOwn = ride.userId !== this.currentUser.id;
+          const isActive = ride.status === 'active';
+          
+          return matchesFrom && matchesTo && matchesDate && isNotOwn && isActive;
+        });
+        
+        this.displaySearchResults(filteredRides);
+      }
+      
+      displaySearchResults(rides) {
+        const resultsContainer = document.getElementById('searchResults');
+        resultsContainer.innerHTML = '';
+        
+        if (rides.length === 0) {
+          resultsContainer.innerHTML = '<p>No rides found matching your criteria.</p>';
+          return;
+        }
+        
+        rides.forEach(ride => {
+          const rideElement = document.createElement('div');
+          rideElement.className = 'match-card';
+          rideElement.innerHTML = `
+            <div class="match-header">
+              <div class="match-user">${ride.type === 'driver' ? '🚗 Driver' : '👤 Passenger'}</div>
+              <div class="compatibility-score">${ride.price > 0 ? '$' + ride.price : 'Free'}</div>
+            </div>
+            <div class="match-details">
+              <div class="detail-item">
+                <i>📍</i>
+                <span>${ride.from} → ${ride.to}</span>
+              </div>
+              <div class="detail-item">
+                <i>🕒</i>
+                <span>${new Date(ride.departureTime).toLocaleString()}</span>
+              </div>
+              <div class="detail-item">
+                <i>💺</i>
+                <span>${ride.seatsAvailable} seat${ride.seatsAvailable > 1 ? 's' : ''} available</span>
+              </div>
+              <div class="detail-item">
+                <i>📝</i>
+                <span>${ride.notes || 'No additional notes'}</span>
+              </div>
+            </div>
+            <div class="match-actions">
+              <button class="btn btn-small" onclick="carpoolApp.requestMatch('${ride.id}')">Request Match</button>
+              <button class="btn btn-small btn-warning" onclick="carpoolApp.viewProfile('${ride.userId}')">View Profile</button>
+            </div>
+          `;
+          resultsContainer.appendChild(rideElement);
+        });
+      }
+      
+      async saveProfile() {
+        const formData = new FormData(document.getElementById('profileForm'));
+        const preferences = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+          .map(checkbox => checkbox.value);
+        
+        this.currentUser = {
+          ...this.currentUser,
+          name: document.getElementById('userName').value,
+          email: document.getElementById('userEmail').value,
+          phone: document.getElementById('userPhone').value,
+          year: document.getElementById('userYear').value,
+          preferences: preferences
+        };
+        
+        await this.saveUser(this.currentUser);
+        this.updateProfileAvatar();
+        this.showNotification('Profile saved successfully!', 'success');
+      }
+      
+      updateProfileAvatar() {
+        const avatar = document.getElementById('profileAvatar');
+        if (this.currentUser && this.currentUser.name) {
+          avatar.textContent = this.currentUser.name.charAt(0).toUpperCase();
+        }
+      }
+      
+      async startMatching() {
+        const allRides = await this.getAllRides();
+        const userRides = allRides.filter(ride => ride.userId === this.currentUser.id);
+        const otherRides = allRides.filter(ride => ride.userId !== this.currentUser.id);
+        
+        const newMatches = [];
+        
+        for (const userRide of userRides) {
+          for (const otherRide of otherRides) {
+            const compatibility = this.calculateCompatibility(userRide, otherRide);
+            if (compatibility.score > 0.6) {
+              const matchId = `match-${userRide.id}-${otherRide.id}`;
+              const existingMatch = await this.getMatch(matchId);
+              
+              if (!existingMatch) {
+                const match = {
+                  id: matchId,
+                  ride1Id: userRide.id,
+                  ride2Id: otherRide.id,
+                  userId1: userRide.userId,
+                  userId2: otherRide.userId,
+                  compatibility: compatibility,
+                  status: 'pending',
+                  timestamp: new Date().toISOString()
+                };
+                
+                await this.saveMatch(match);
+                newMatches.push(match);
+              }
+            }
+          }
+        }
+        
+        if (newMatches.length > 0) {
+          this.showNotification(`Found ${newMatches.length} new potential matches!`, 'success');
+          this.loadMatches();
+        }
+      }
+      
+      calculateCompatibility(ride1, ride2) {
+        let score = 0;
+        let factors = [];
+        
+        // Location compatibility
+        const fromMatch = this.locationSimilarity(ride1.from, ride2.from);
+        const toMatch = this.locationSimilarity(ride1.to, ride2.to);
+        
+        if (fromMatch > 0.8) {
+          score += 0.3;
+          factors.push('Same pickup location');
+        }
+        
+        if (toMatch > 0.8) {
+          score += 0.3;
+          factors.push('Same destination');
+        }
+        
+        // Time compatibility
+        const time1 = new Date(ride1.departureTime);
+        const time2 = new Date(ride2.departureTime);
+        const timeDiff = Math.abs(time1 - time2) / (1000 * 60 * 60); // hours
+        
+        if (timeDiff < 1) {
+          score += 0.2;
+          factors.push('Similar departure time');
+        } else if (timeDiff < 2) {
+          score += 0.1;
+          factors.push('Close departure time');
+        }
+        
+        // Price compatibility
+        if (ride1.price === ride2.price) {
+          score += 0.1;
+          factors.push('Same price');
+        }
+        
+        // Route compatibility
+        if (this.isRouteCompatible(ride1, ride2)) {
+          score += 0.1;
+          factors.push('Compatible route');
+        }
+        
+        return {
+          score: Math.min(score, 1),
+          factors: factors
+        };
+      }
+      
+      locationSimilarity(loc1, loc2) {
+        const words1 = loc1.toLowerCase().split(/\s+/);
+        const words2 = loc2.toLowerCase().split(/\s+/);
+        
+        let matches = 0;
+        for (const word1 of words1) {
+          for (const word2 of words2) {
+            if (word1 === word2 || word1.includes(word2) || word2.includes(word1)) {
+              matches++;
+              break;
+            }
+          }
+        }
+        
+        return matches / Math.max(words1.length, words2.length);
+      }
+      
+      isRouteCompatible(ride1, ride2) {
+        // Simple route compatibility check
+        const route1 = `${ride1.from} to ${ride1.to}`.toLowerCase();
+        const route2 = `${ride2.from} to ${ride2.to}`.toLowerCase();
+        
+        return route1 === route2 || 
+               route1.includes(ride2.from) || 
+               route2.includes(ride1.from);
+      }
+      
+      async loadMatches() {
+        const allMatches = await this.getAllMatches();
+        const userMatches = allMatches.filter(match => 
+          match.userId1 === this.currentUser.id || match.userId2 === this.currentUser.id
+        );
+        
+        this.matches = userMatches;
+        this.displayMatches(userMatches);
+      }
+      
+      displayMatches(matches) {
+        const matchesContainer = document.getElementById('matchesList');
+        matchesContainer.innerHTML = '';
+        
+        if (matches.length === 0) {
+          matchesContainer.innerHTML = '<p>No matches found yet. Post a ride to find potential matches!</p>';
+          return;
+        }
+        
+        matches.forEach(match => {
+          const matchElement = document.createElement('div');
+          const compatibilityClass = match.compatibility.score > 0.8 ? 'high-compatibility' : 
+                                   match.compatibility.score > 0.6 ? 'medium-compatibility' : '';
+          
+          matchElement.className = `match-card ${compatibilityClass}`;
+          matchElement.innerHTML = `
+            <div class="match-header">
+              <div class="match-user">Potential Match</div>
+              <div class="compatibility-score">${Math.round(match.compatibility.score * 100)}% Match</div>
+            </div>
+            <div class="match-details">
+              <div class="detail-item">
+                <i>🎯</i>
+                <span>Compatibility: ${match.compatibility.factors.join(', ')}</span>
+              </div>
+              <div class="detail-item">
+                <i>📅</i>
+                <span>Matched: ${new Date(match.timestamp).toLocaleDateString()}</span>
+              </div>
+            </div>
+            <div class="match-actions">
+              <button class="btn btn-small btn-success" onclick="carpoolApp.acceptMatch('${match.id}')">Accept</button>
+              <button class="btn btn-small btn-warning" onclick="carpoolApp.startChat('${match.id}')">Chat</button>
+              <button class="btn btn-small btn-danger" onclick="carpoolApp.rejectMatch('${match.id}')">Reject</button>
+            </div>
+          `;
+          matchesContainer.appendChild(matchElement);
+        });
+      }
+      
+      async acceptMatch(matchId) {
+        const match = await this.getMatch(matchId);
+        if (match) {
+          match.status = 'accepted';
+          await this.saveMatch(match);
+          this.showNotification('Match accepted! You can now chat with this person.', 'success');
+          this.loadMatches();
+        }
+      }
+      
+      async rejectMatch(matchId) {
+        const match = await this.getMatch(matchId);
+        if (match) {
+          match.status = 'rejected';
+          await this.saveMatch(match);
+          this.showNotification('Match rejected.', 'info');
+          this.loadMatches();
+        }
+      }
+      
+      async startChat(matchId) {
+        const match = await this.getMatch(matchId);
+        if (match) {
+          document.getElementById('chatContainer').style.display = 'flex';
+          document.getElementById('chatUserName').textContent = 'Chat with Match';
+          this.currentChatMatch = matchId;
+          await this.loadChatMessages(matchId);
+        }
+      }
+      
+      async loadChatMessages(matchId) {
+        const messages = await this.getMessages(matchId);
+        const messagesContainer = document.getElementById('chatMessages');
+        messagesContainer.innerHTML = '';
+        
+        messages.forEach(message => {
+          const messageElement = document.createElement('div');
+          messageElement.className = `message ${message.senderId === this.currentUser.id ? 'sent' : 'received'}`;
+          messageElement.innerHTML = `
+            <div>${message.text}</div>
+            <div style="font-size: 0.8em; opacity: 0.7; margin-top: 5px;">
+              ${new Date(message.timestamp).toLocaleTimeString()}
+            </div>
+          `;
+          messagesContainer.appendChild(messageElement);
+        });
+        
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+      
+      async sendMessage() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        
+        if (!text || !this.currentChatMatch) return;
+        
+        const message = {
+          id: 'msg-' + Date.now(),
+          matchId: this.currentChatMatch,
+          senderId: this.currentUser.id,
+          text: text,
+          timestamp: new Date().toISOString()
+        };
+        
+        await this.saveMessage(message);
+        input.value = '';
+        await this.loadChatMessages(this.currentChatMatch);
+      }
+      
+      closeChat() {
+        document.getElementById('chatContainer').style.display = 'none';
+        this.currentChatMatch = null;
+      }
+      
+      updateOfflineIndicator() {
+        const indicator = document.getElementById('offlineIndicator');
+        if (navigator.onLine) {
+          indicator.textContent = '📡 Online Mode';
+          indicator.className = 'offline-indicator';
+        } else {
+          indicator.textContent = '📱 Offline Mode';
+          indicator.className = 'offline-indicator offline';
+        }
+      }
+      
+      showNotification(message, type = 'info') {
+        // Simple notification system
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
+          color: white;
+          padding: 15px 25px;
+          border-radius: 25px;
+          z-index: 1000;
+          font-weight: 600;
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.remove();
+        }, 3000);
+      }
+      
+      // Database operations
+      async saveUser(user) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['users'], 'readwrite');
+          const store = transaction.objectStore('users');
+          const request = store.put(user);
+          
+          request.onsuccess = () => {
+            localStorage.setItem('carpoolUser', JSON.stringify(user));
+            resolve();
+          };
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async saveRide(ride) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['rides'], 'readwrite');
+          const store = transaction.objectStore('rides');
+          const request = store.put(ride);
+          
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async getAllRides() {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['rides'], 'readonly');
+          const store = transaction.objectStore('rides');
+          const request = store.getAll();
+          
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async saveMatch(match) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['matches'], 'readwrite');
+          const store = transaction.objectStore('matches');
+          const request = store.put(match);
+          
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async getMatch(matchId) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['matches'], 'readonly');
+          const store = transaction.objectStore('matches');
+          const request = store.get(matchId);
+          
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async getAllMatches() {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['matches'], 'readonly');
+          const store = transaction.objectStore('matches');
+          const request = store.getAll();
+          
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async saveMessage(message) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['messages'], 'readwrite');
+          const store = transaction.objectStore('messages');
+          const request = store.put(message);
+          
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async getMessages(matchId) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['messages'], 'readonly');
+          const store = transaction.objectStore('messages');
+          const index = store.index('matchId');
+          const request = index.getAll(matchId);
+          
+          request.onsuccess = () => resolve(request.result.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)));
+          request.onerror = () => reject(request.error);
+        });
+      }
+    }
+    
+    // Tab switching
+    function switchTab(tabName) {
+      // Hide all sections
+      document.querySelectorAll('.card').forEach(card => {
+        card.style.display = 'none';
+      });
+      
+      // Remove active class from all tabs
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Show selected section
+      if (tabName === 'post') {
+        document.getElementById('postRideSection').style.display = 'block';
+      } else if (tabName === 'find') {
+        document.getElementById('findRidesSection').style.display = 'block';
+      } else if (tabName === 'profile') {
+        document.getElementById('profileSection').style.display = 'block';
+        carpoolApp.loadProfileData();
+      } else if (tabName === 'matches') {
+        document.getElementById('matchesSection').style.display = 'block';
+        carpoolApp.loadMatches();
+      }
+      
+      // Add active class to clicked tab
+      event.target.classList.add('active');
+    }
+    
+    // Global functions for buttons
+    function closeChat() {
+      carpoolApp.closeChat();
+    }
+    
+    function sendMessage() {
+      carpoolApp.sendMessage();
+    }
+    
+    // Initialize the app
+    let carpoolApp;
+    document.addEventListener('DOMContentLoaded', () => {
+      carpoolApp = new CarpoolMatching();
+    });
+  </script>
+</body>
+</html>

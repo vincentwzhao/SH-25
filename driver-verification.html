@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SFU Driver Verification System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    
+    .header h1 {
+      color: #2c3e50;
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #7f8c8d;
+      font-size: 1.1em;
+    }
+    
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .card h2 {
+      color: #2c3e50;
+      margin-bottom: 25px;
+      font-size: 1.5em;
+      border-bottom: 3px solid #3498db;
+      padding-bottom: 15px;
+    }
+    
+    .form-group {
+      margin-bottom: 25px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 10px;
+      color: #2c3e50;
+      font-weight: 600;
+      font-size: 1.1em;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #ecf0f1;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 10px rgba(52, 152, 219, 0.2);
+    }
+    
+    .btn {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin: 10px 5px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, #27ae60, #229954);
+    }
+    
+    .btn-warning {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+    
+    .btn-info {
+      background: linear-gradient(135deg, #17a2b8, #138496);
+    }
+    
+    .verification-status {
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-weight: 600;
+      text-align: center;
+    }
+    
+    .status-pending {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      color: white;
+    }
+    
+    .status-verified {
+      background: linear-gradient(135deg, #27ae60, #229954);
+      color: white;
+    }
+    
+    .status-rejected {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+    }
+    
+    .status-under-review {
+      background: linear-gradient(135deg, #17a2b8, #138496);
+      color: white;
+    }
+    
+    .rating-section {
+      margin: 20px 0;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 10px;
+    }
+    
+    .rating-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 10px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .rating-label {
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    
+    .rating-stars {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .star {
+      font-size: 24px;
+      color: #ddd;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+    
+    .star.active {
+      color: #f39c12;
+    }
+    
+    .star:hover {
+      color: #f39c12;
+    }
+    
+    .waiver-section {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .waiver-content {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    
+    .admin-panel {
+      grid-column: 1 / -1;
+    }
+    
+    .admin-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .admin-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .driver-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .driver-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      margin-bottom: 10px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+    
+    .driver-item:hover {
+      transform: translateY(-2px);
+    }
+    
+    .driver-info {
+      flex: 1;
+    }
+    
+    .driver-name {
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+    
+    .driver-id {
+      color: #7f8c8d;
+      font-size: 0.9em;
+    }
+    
+    .driver-status {
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: 600;
+      margin-left: 15px;
+    }
+    
+    .status-badge-pending {
+      background: #f39c12;
+      color: white;
+    }
+    
+    .status-badge-verified {
+      background: #27ae60;
+      color: white;
+    }
+    
+    .status-badge-rejected {
+      background: #e74c3c;
+      color: white;
+    }
+    
+    .status-badge-under-review {
+      background: #17a2b8;
+      color: white;
+    }
+    
+    .rating-display {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .average-rating {
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    
+    .rating-count {
+      color: #7f8c8d;
+      font-size: 0.9em;
+    }
+    
+    .verification-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+    
+    .step-card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    .step-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .step-icon {
+      font-size: 3em;
+      margin-bottom: 15px;
+    }
+    
+    .step-title {
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+    
+    .step-description {
+      color: #7f8c8d;
+      font-size: 0.9em;
+    }
+    
+    .step-completed {
+      background: linear-gradient(135deg, #27ae60, #229954);
+      color: white;
+    }
+    
+    .step-pending {
+      background: #f8f9fa;
+      color: #6c757d;
+    }
+    
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 10px;
+      color: white;
+      font-weight: 600;
+      z-index: 1000;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+    }
+    
+    .notification.show {
+      transform: translateX(0);
+    }
+    
+    .notification.success {
+      background: linear-gradient(135deg, #27ae60, #229954);
+    }
+    
+    .notification.error {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+    
+    .notification.info {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 30px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 5px;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      color: #7f8c8d;
+      font-weight: 600;
+    }
+    
+    .tab.active {
+      background: white;
+      color: #2c3e50;
+    }
+    
+    @media (max-width: 768px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+      
+      .admin-controls {
+        grid-template-columns: 1fr;
+      }
+      
+      .verification-steps {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🚗 SFU Driver Verification System</h1>
+      <p>Comprehensive driver verification with student ID validation, waiver management, and rating system</p>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('verification')">Driver Verification</div>
+      <div class="tab" onclick="switchTab('ratings')">Rating System</div>
+      <div class="tab" onclick="switchTab('waivers')">Waiver Management</div>
+      <div class="tab" onclick="switchTab('admin')">Admin Panel</div>
+    </div>
+    
+    <div class="main-content">
+      <!-- Driver Verification Section -->
+      <div class="card" id="verificationSection">
+        <h2>📋 Driver Verification</h2>
+        
+        <div id="verificationStatus" class="verification-status status-pending">
+          Verification Status: Pending
+        </div>
+        
+        <form id="verificationForm">
+          <div class="form-group">
+            <label for="studentId">SFU Student ID</label>
+            <input type="text" id="studentId" placeholder="Enter your SFU Student ID" required>
+            <small style="color: #7f8c8d; margin-top: 5px; display: block;">
+              Format: 301234567 or sfu1234567
+            </small>
+          </div>
+          
+          <div class="form-group">
+            <label for="fullName">Full Name (as on ID)</label>
+            <input type="text" id="fullName" placeholder="Enter your full name" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="email">SFU Email</label>
+            <input type="email" id="email" placeholder="yourname@sfu.ca" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" placeholder="(604) 123-4567" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="licenseNumber">Driver's License Number</label>
+            <input type="text" id="licenseNumber" placeholder="Enter license number" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="licenseExpiry">License Expiry Date</label>
+            <input type="date" id="licenseExpiry" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="vehicleInfo">Vehicle Information</label>
+            <textarea id="vehicleInfo" rows="3" placeholder="Make, Model, Year, Color, License Plate" required></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="insuranceInfo">Insurance Information</label>
+            <textarea id="insuranceInfo" rows="3" placeholder="Insurance provider, policy number, expiry date" required></textarea>
+          </div>
+          
+          <button type="submit" class="btn btn-success">Submit Verification</button>
+        </form>
+        
+        <div class="verification-steps">
+          <div class="step-card step-pending" id="step1">
+            <div class="step-icon">🆔</div>
+            <div class="step-title">Student ID Verification</div>
+            <div class="step-description">Verify SFU student status</div>
+          </div>
+          <div class="step-card step-pending" id="step2">
+            <div class="step-icon">📄</div>
+            <div class="step-title">Waiver Completion</div>
+            <div class="step-description">Complete liability waiver</div>
+          </div>
+          <div class="step-card step-pending" id="step3">
+            <div class="step-icon">🚗</div>
+            <div class="step-title">Vehicle Verification</div>
+            <div class="step-description">Verify vehicle and insurance</div>
+          </div>
+          <div class="step-card step-pending" id="step4">
+            <div class="step-icon">✅</div>
+            <div class="step-title">Final Approval</div>
+            <div class="step-description">Admin review and approval</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Rating System Section -->
+      <div class="card" id="ratingsSection" style="display: none;">
+        <h2>⭐ Rating System</h2>
+        
+        <div class="rating-section">
+          <h3>Rate Your Driver Experience</h3>
+          <form id="ratingForm">
+            <div class="form-group">
+              <label for="driverSelect">Select Driver to Rate</label>
+              <select id="driverSelect" required>
+                <option value="">Choose a driver</option>
+              </select>
+            </div>
+            
+            <div class="rating-item">
+              <div class="rating-label">Cleanliness</div>
+              <div class="rating-stars" data-rating="cleanliness">
+                <span class="star" data-value="1">★</span>
+                <span class="star" data-value="2">★</span>
+                <span class="star" data-value="3">★</span>
+                <span class="star" data-value="4">★</span>
+                <span class="star" data-value="5">★</span>
+              </div>
+            </div>
+            
+            <div class="rating-item">
+              <div class="rating-label">Amiability</div>
+              <div class="rating-stars" data-rating="amiability">
+                <span class="star" data-value="1">★</span>
+                <span class="star" data-value="2">★</span>
+                <span class="star" data-value="3">★</span>
+                <span class="star" data-value="4">★</span>
+                <span class="star" data-value="5">★</span>
+              </div>
+            </div>
+            
+            <div class="rating-item">
+              <div class="rating-label">Punctuality</div>
+              <div class="rating-stars" data-rating="punctuality">
+                <span class="star" data-value="1">★</span>
+                <span class="star" data-value="2">★</span>
+                <span class="star" data-value="3">★</span>
+                <span class="star" data-value="4">★</span>
+                <span class="star" data-value="5">★</span>
+              </div>
+            </div>
+            
+            <div class="rating-item">
+              <div class="rating-label">Safety</div>
+              <div class="rating-stars" data-rating="safety">
+                <span class="star" data-value="1">★</span>
+                <span class="star" data-value="2">★</span>
+                <span class="star" data-value="3">★</span>
+                <span class="star" data-value="4">★</span>
+                <span class="star" data-value="5">★</span>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="ratingComment">Additional Comments</label>
+              <textarea id="ratingComment" rows="3" placeholder="Share your experience..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-success">Submit Rating</button>
+          </form>
+        </div>
+        
+        <div id="ratingHistory">
+          <h3>Rating History</h3>
+          <div id="ratingList">
+            <!-- Rating history will be populated here -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Waiver Management Section -->
+      <div class="card" id="waiversSection" style="display: none;">
+        <h2>📄 Waiver Management</h2>
+        
+        <div class="waiver-section">
+          <h3>SFU Carpool Liability Waiver</h3>
+          <div class="waiver-content">
+            <p><strong>WAIVER AND RELEASE OF LIABILITY</strong></p>
+            <p>By participating in the SFU Carpool program, I acknowledge and agree to the following:</p>
+            
+            <p><strong>1. ASSUMPTION OF RISK</strong><br>
+            I understand that carpooling involves inherent risks including, but not limited to, traffic accidents, vehicle malfunctions, and other transportation-related hazards. I voluntarily assume all such risks.</p>
+            
+            <p><strong>2. RELEASE OF LIABILITY</strong><br>
+            I hereby release Simon Fraser University, its officers, employees, and agents from any and all liability, claims, demands, or causes of action arising from my participation in the carpool program.</p>
+            
+            <p><strong>3. DRIVER RESPONSIBILITIES</strong><br>
+            As a driver, I agree to:
+            - Maintain valid driver's license and insurance
+            - Ensure vehicle safety and roadworthiness
+            - Follow all traffic laws and regulations
+            - Provide a safe and comfortable environment for passengers</p>
+            
+            <p><strong>4. PASSENGER RESPONSIBILITIES</strong><br>
+            As a passenger, I agree to:
+            - Follow driver instructions and safety guidelines
+            - Respect other passengers and driver
+            - Not engage in disruptive or dangerous behavior
+            - Arrive on time for scheduled pickups</p>
+            
+            <p><strong>5. EMERGENCY CONTACTS</strong><br>
+            I understand that in case of emergency, the driver or other participants may contact emergency services and my emergency contact.</p>
+            
+            <p><strong>6. MODIFICATION OF TERMS</strong><br>
+            SFU reserves the right to modify these terms at any time. Continued participation constitutes acceptance of modified terms.</p>
+            
+            <p><strong>7. GOVERNING LAW</strong><br>
+            This waiver shall be governed by the laws of British Columbia, Canada.</p>
+            
+            <p><strong>ACKNOWLEDGMENT</strong><br>
+            I have read and understood this waiver. I am signing this waiver voluntarily and of my own free will.</p>
+          </div>
+          
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="waiverAgreement" required>
+              I have read and agree to the terms of the SFU Carpool Liability Waiver
+            </label>
+          </div>
+          
+          <div class="form-group">
+            <label for="emergencyContact">Emergency Contact Name</label>
+            <input type="text" id="emergencyContact" placeholder="Emergency contact name" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="emergencyPhone">Emergency Contact Phone</label>
+            <input type="tel" id="emergencyPhone" placeholder="Emergency contact phone" required>
+          </div>
+          
+          <button type="button" class="btn btn-success" onclick="completeWaiver()">Complete Waiver</button>
+        </div>
+        
+        <div id="waiverStatus" style="margin-top: 20px;">
+          <!-- Waiver status will be displayed here -->
+        </div>
+      </div>
+      
+      <!-- Admin Panel Section -->
+      <div class="card admin-panel" id="adminSection" style="display: none;">
+        <h2>👨‍💼 Admin Panel</h2>
+        
+        <div class="admin-controls">
+          <div class="admin-card">
+            <h3>Driver Verification Queue</h3>
+            <div class="driver-list" id="driverList">
+              <!-- Driver list will be populated here -->
+            </div>
+          </div>
+          
+          <div class="admin-card">
+            <h3>Verification Actions</h3>
+            <div id="selectedDriver" style="margin-bottom: 20px;">
+              <p>Select a driver to view details and take action</p>
+            </div>
+            
+            <div class="form-group">
+              <label for="adminNotes">Admin Notes</label>
+              <textarea id="adminNotes" rows="3" placeholder="Add notes about verification decision..."></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+              <button class="btn btn-success" onclick="approveDriver()">Approve Driver</button>
+              <button class="btn btn-warning" onclick="requestMoreInfo()">Request More Info</button>
+              <button class="btn btn-danger" onclick="rejectDriver()">Reject Driver</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="admin-card">
+          <h3>Driver Ratings Overview</h3>
+          <div id="ratingsOverview">
+            <!-- Ratings overview will be populated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Driver Verification System
+    class DriverVerification {
+      constructor() {
+        this.db = null;
+        this.currentUser = null;
+        this.selectedDriver = null;
+        this.init();
+      }
+      
+      async init() {
+        await this.initDB();
+        await this.loadUserData();
+        this.setupEventListeners();
+        this.loadDriverList();
+        this.loadRatings();
+      }
+      
+      async initDB() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open('DriverVerificationDB', 1);
+          
+          request.onerror = () => reject(request.error);
+          request.onsuccess = () => {
+            this.db = request.result;
+            resolve();
+          };
+          
+          request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            
+            // Drivers store
+            if (!db.objectStoreNames.contains('drivers')) {
+              const driverStore = db.createObjectStore('drivers', { keyPath: 'id' });
+              driverStore.createIndex('studentId', 'studentId', { unique: true });
+              driverStore.createIndex('status', 'status');
+              driverStore.createIndex('email', 'email');
+            }
+            
+            // Ratings store
+            if (!db.objectStoreNames.contains('ratings')) {
+              const ratingStore = db.createObjectStore('ratings', { keyPath: 'id' });
+              ratingStore.createIndex('driverId', 'driverId');
+              ratingStore.createIndex('raterId', 'raterId');
+              ratingStore.createIndex('timestamp', 'timestamp');
+            }
+            
+            // Waivers store
+            if (!db.objectStoreNames.contains('waivers')) {
+              const waiverStore = db.createObjectStore('waivers', { keyPath: 'id' });
+              waiverStore.createIndex('driverId', 'driverId');
+              waiverStore.createIndex('status', 'status');
+            }
+          };
+        });
+      }
+      
+      async loadUserData() {
+        const userData = localStorage.getItem('driverUser');
+        if (userData) {
+          this.currentUser = JSON.parse(userData);
+        } else {
+          this.currentUser = {
+            id: 'user-' + Date.now(),
+            name: 'Demo User',
+            email: 'demo@sfu.ca',
+            role: 'driver'
+          };
+          await this.saveUser(this.currentUser);
+        }
+      }
+      
+      setupEventListeners() {
+        // Verification form
+        document.getElementById('verificationForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.submitVerification();
+        });
+        
+        // Rating form
+        document.getElementById('ratingForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.submitRating();
+        });
+        
+        // Star ratings
+        document.querySelectorAll('.rating-stars').forEach(stars => {
+          stars.addEventListener('click', (e) => {
+            if (e.target.classList.contains('star')) {
+              this.setStarRating(stars, parseInt(e.target.dataset.value));
+            }
+          });
+        });
+      }
+      
+      async submitVerification() {
+        const formData = new FormData(document.getElementById('verificationForm'));
+        const studentId = document.getElementById('studentId').value;
+        
+        // Validate student ID format
+        if (!this.validateStudentId(studentId)) {
+          this.showNotification('Invalid SFU Student ID format', 'error');
+          return;
+        }
+        
+        const driver = {
+          id: 'driver-' + Date.now(),
+          studentId: studentId,
+          fullName: document.getElementById('fullName').value,
+          email: document.getElementById('email').value,
+          phone: document.getElementById('phone').value,
+          licenseNumber: document.getElementById('licenseNumber').value,
+          licenseExpiry: document.getElementById('licenseExpiry').value,
+          vehicleInfo: document.getElementById('vehicleInfo').value,
+          insuranceInfo: document.getElementById('insuranceInfo').value,
+          status: 'pending',
+          submittedAt: new Date().toISOString(),
+          adminNotes: '',
+          verificationSteps: {
+            studentId: false,
+            waiver: false,
+            vehicle: false,
+            approval: false
+          }
+        };
+        
+        await this.saveDriver(driver);
+        this.showNotification('Verification submitted successfully!', 'success');
+        this.updateVerificationStatus('under-review');
+        this.loadDriverList();
+      }
+      
+      validateStudentId(studentId) {
+        // SFU Student ID validation
+        const patterns = [
+          /^[0-9]{9}$/, // 9-digit number
+          /^sfu[0-9]{7}$/i, // sfu + 7 digits
+          /^[0-9]{8}$/ // 8-digit number
+        ];
+        
+        return patterns.some(pattern => pattern.test(studentId));
+      }
+      
+      async submitRating() {
+        const driverId = document.getElementById('driverSelect').value;
+        if (!driverId) {
+          this.showNotification('Please select a driver to rate', 'error');
+          return;
+        }
+        
+        const ratings = {};
+        document.querySelectorAll('.rating-stars').forEach(stars => {
+          const rating = stars.querySelector('.star.active');
+          if (rating) {
+            ratings[stars.dataset.rating] = parseInt(rating.dataset.value);
+          }
+        });
+        
+        const rating = {
+          id: 'rating-' + Date.now(),
+          driverId: driverId,
+          raterId: this.currentUser.id,
+          ratings: ratings,
+          comment: document.getElementById('ratingComment').value,
+          timestamp: new Date().toISOString()
+        };
+        
+        await this.saveRating(rating);
+        this.showNotification('Rating submitted successfully!', 'success');
+        this.loadRatings();
+        document.getElementById('ratingForm').reset();
+      }
+      
+      setStarRating(starsContainer, rating) {
+        const stars = starsContainer.querySelectorAll('.star');
+        stars.forEach((star, index) => {
+          if (index < rating) {
+            star.classList.add('active');
+          } else {
+            star.classList.remove('active');
+          }
+        });
+      }
+      
+      async completeWaiver() {
+        const agreement = document.getElementById('waiverAgreement').checked;
+        if (!agreement) {
+          this.showNotification('You must agree to the waiver terms', 'error');
+          return;
+        }
+        
+        const waiver = {
+          id: 'waiver-' + Date.now(),
+          driverId: this.currentUser.id,
+          emergencyContact: document.getElementById('emergencyContact').value,
+          emergencyPhone: document.getElementById('emergencyPhone').value,
+          status: 'completed',
+          completedAt: new Date().toISOString(),
+          ipAddress: '127.0.0.1', // Demo IP
+          userAgent: navigator.userAgent
+        };
+        
+        await this.saveWaiver(waiver);
+        this.showNotification('Waiver completed successfully!', 'success');
+        this.updateWaiverStatus();
+      }
+      
+      async loadDriverList() {
+        const drivers = await this.getAllDrivers();
+        const driverList = document.getElementById('driverList');
+        driverList.innerHTML = '';
+        
+        drivers.forEach(driver => {
+          const driverElement = document.createElement('div');
+          driverElement.className = 'driver-item';
+          driverElement.onclick = () => this.selectDriver(driver);
+          
+          const averageRating = this.calculateAverageRating(driver.id);
+          
+          driverElement.innerHTML = `
+            <div class="driver-info">
+              <div class="driver-name">${driver.fullName}</div>
+              <div class="driver-id">ID: ${driver.studentId}</div>
+              <div class="rating-display">
+                <span class="average-rating">${averageRating.toFixed(1)} ⭐</span>
+                <span class="rating-count">(${driver.ratingCount || 0} ratings)</span>
+              </div>
+            </div>
+            <div class="driver-status status-badge-${driver.status}">${driver.status.toUpperCase()}</div>
+          `;
+          
+          driverList.appendChild(driverElement);
+        });
+      }
+      
+      selectDriver(driver) {
+        this.selectedDriver = driver;
+        document.getElementById('selectedDriver').innerHTML = `
+          <h4>${driver.fullName}</h4>
+          <p><strong>Student ID:</strong> ${driver.studentId}</p>
+          <p><strong>Email:</strong> ${driver.email}</p>
+          <p><strong>Phone:</strong> ${driver.phone}</p>
+          <p><strong>Status:</strong> ${driver.status}</p>
+          <p><strong>Submitted:</strong> ${new Date(driver.submittedAt).toLocaleDateString()}</p>
+        `;
+      }
+      
+      async approveDriver() {
+        if (!this.selectedDriver) {
+          this.showNotification('Please select a driver first', 'error');
+          return;
+        }
+        
+        this.selectedDriver.status = 'verified';
+        this.selectedDriver.adminNotes = document.getElementById('adminNotes').value;
+        this.selectedDriver.verifiedAt = new Date().toISOString();
+        
+        await this.saveDriver(this.selectedDriver);
+        this.showNotification('Driver approved successfully!', 'success');
+        this.loadDriverList();
+        this.selectDriver(null);
+      }
+      
+      async rejectDriver() {
+        if (!this.selectedDriver) {
+          this.showNotification('Please select a driver first', 'error');
+          return;
+        }
+        
+        this.selectedDriver.status = 'rejected';
+        this.selectedDriver.adminNotes = document.getElementById('adminNotes').value;
+        this.selectedDriver.rejectedAt = new Date().toISOString();
+        
+        await this.saveDriver(this.selectedDriver);
+        this.showNotification('Driver rejected', 'info');
+        this.loadDriverList();
+        this.selectDriver(null);
+      }
+      
+      async loadRatings() {
+        const ratings = await this.getAllRatings();
+        const ratingsList = document.getElementById('ratingList');
+        ratingsList.innerHTML = '';
+        
+        if (ratings.length === 0) {
+          ratingsList.innerHTML = '<p>No ratings available yet.</p>';
+          return;
+        }
+        
+        ratings.forEach(rating => {
+          const ratingElement = document.createElement('div');
+          ratingElement.className = 'driver-item';
+          ratingElement.innerHTML = `
+            <div class="driver-info">
+              <div class="driver-name">Rating for Driver ID: ${rating.driverId}</div>
+              <div class="driver-id">
+                Cleanliness: ${rating.ratings.cleanliness || 0}⭐ | 
+                Amiability: ${rating.ratings.amiability || 0}⭐ | 
+                Punctuality: ${rating.ratings.punctuality || 0}⭐ | 
+                Safety: ${rating.ratings.safety || 0}⭐
+              </div>
+              <div style="margin-top: 5px; color: #7f8c8d;">
+                ${rating.comment || 'No additional comments'}
+              </div>
+            </div>
+            <div class="driver-status">${new Date(rating.timestamp).toLocaleDateString()}</div>
+          `;
+          ratingsList.appendChild(ratingElement);
+        });
+      }
+      
+      calculateAverageRating(driverId) {
+        // This would calculate from actual ratings in a real implementation
+        return Math.random() * 2 + 3; // Demo: random rating between 3-5
+      }
+      
+      updateVerificationStatus(status) {
+        const statusElement = document.getElementById('verificationStatus');
+        statusElement.className = `verification-status status-${status}`;
+        statusElement.textContent = `Verification Status: ${status.replace('-', ' ').toUpperCase()}`;
+      }
+      
+      updateWaiverStatus() {
+        const waiverStatus = document.getElementById('waiverStatus');
+        waiverStatus.innerHTML = `
+          <div class="verification-status status-verified">
+            ✅ Waiver Completed Successfully
+          </div>
+        `;
+      }
+      
+      showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.classList.add('show');
+        }, 100);
+        
+        setTimeout(() => {
+          notification.classList.remove('show');
+          setTimeout(() => notification.remove(), 300);
+        }, 3000);
+      }
+      
+      // Database operations
+      async saveDriver(driver) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['drivers'], 'readwrite');
+          const store = transaction.objectStore('drivers');
+          const request = store.put(driver);
+          
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async getAllDrivers() {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['drivers'], 'readonly');
+          const store = transaction.objectStore('drivers');
+          const request = store.getAll();
+          
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async saveRating(rating) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['ratings'], 'readwrite');
+          const store = transaction.objectStore('ratings');
+          const request = store.put(rating);
+          
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async getAllRatings() {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['ratings'], 'readonly');
+          const store = transaction.objectStore('ratings');
+          const request = store.getAll();
+          
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async saveWaiver(waiver) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['waivers'], 'readwrite');
+          const store = transaction.objectStore('waivers');
+          const request = store.put(waiver);
+          
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async saveUser(user) {
+        return new Promise((resolve, reject) => {
+          const transaction = this.db.transaction(['users'], 'readwrite');
+          const store = transaction.objectStore('users');
+          const request = store.put(user);
+          
+          request.onsuccess = () => {
+            localStorage.setItem('driverUser', JSON.stringify(user));
+            resolve();
+          };
+          request.onerror = () => reject(request.error);
+        });
+      }
+    }
+    
+    // Tab switching
+    function switchTab(tabName) {
+      // Hide all sections
+      document.querySelectorAll('.card').forEach(card => {
+        card.style.display = 'none';
+      });
+      
+      // Remove active class from all tabs
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Show selected section
+      if (tabName === 'verification') {
+        document.getElementById('verificationSection').style.display = 'block';
+      } else if (tabName === 'ratings') {
+        document.getElementById('ratingsSection').style.display = 'block';
+      } else if (tabName === 'waivers') {
+        document.getElementById('waiversSection').style.display = 'block';
+      } else if (tabName === 'admin') {
+        document.getElementById('adminSection').style.display = 'block';
+      }
+      
+      // Add active class to clicked tab
+      event.target.classList.add('active');
+    }
+    
+    // Global functions
+    function completeWaiver() {
+      driverVerificationApp.completeWaiver();
+    }
+    
+    function approveDriver() {
+      driverVerificationApp.approveDriver();
+    }
+    
+    function rejectDriver() {
+      driverVerificationApp.rejectDriver();
+    }
+    
+    function requestMoreInfo() {
+      driverVerificationApp.showNotification('More information requested from driver', 'info');
+    }
+    
+    // Initialize the app
+    let driverVerificationApp;
+    document.addEventListener('DOMContentLoaded', () => {
+      driverVerificationApp = new DriverVerification();
+    });
+  </script>
+</body>
+</html>

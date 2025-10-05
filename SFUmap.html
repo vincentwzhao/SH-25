@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SFU Campus Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f5f5;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #8B0000, #A52A2A);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 2.5em;
+      font-weight: 300;
+    }
+    
+    .header p {
+      margin: 10px 0 0 0;
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+    
+    #map {
+      height: calc(100vh - 120px);
+      width: 100%;
+    }
+    
+    .sfu-popup {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .sfu-popup h3 {
+      color: #8B0000;
+      margin: 0 0 10px 0;
+      font-size: 1.2em;
+    }
+    
+    .sfu-popup p {
+      margin: 5px 0;
+      color: #333;
+    }
+    
+    .sfu-popup .building-info {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    
+    .controls {
+      position: absolute;
+      top: 140px;
+      right: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      z-index: 1000;
+      min-width: 200px;
+    }
+    
+    .controls h4 {
+      margin: 0 0 15px 0;
+      color: #8B0000;
+      font-size: 1.1em;
+    }
+    
+    .control-group {
+      margin-bottom: 15px;
+    }
+    
+    .control-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .control-group input, .control-group select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    
+    .btn {
+      background: #8B0000;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 5px 0;
+      width: 100%;
+      transition: background 0.3s;
+    }
+    
+    .btn:hover {
+      background: #A52A2A;
+    }
+    
+    .btn.secondary {
+      background: #6c757d;
+    }
+    
+    .btn.secondary:hover {
+      background: #5a6268;
+    }
+    
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+    
+    .legend h4 {
+      margin: 0 0 10px 0;
+      color: #8B0000;
+      font-size: 1.1em;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+    }
+    
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    
+    .tc-color { background: #FF6B35; }
+    .transport-color { background: #4ECDC4; }
+    .campus-color { background: #8B0000; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Simon Fraser University</h1>
+    <p>Campus Interactive Map</p>
+  </div>
+  
+  <div id="map"></div>
+  
+  <div class="controls">
+    <h4>Map Controls</h4>
+    
+    <div class="control-group">
+      <label for="zoomLevel">Zoom Level:</label>
+      <input type="range" id="zoomLevel" min="15" max="20" value="17">
+    </div>
+    
+    <div class="control-group">
+      <label for="layerSelect">Map Layer:</label>
+      <select id="layerSelect">
+        <option value="osm">OpenStreetMap</option>
+        <option value="satellite">Satellite</option>
+        <option value="terrain">Terrain</option>
+      </select>
+    </div>
+    
+    <button class="btn" onclick="centerOnSFU()">Center on SFU</button>
+    <button class="btn" onclick="showAllLocations()">Show All Locations</button>
+    <button class="btn secondary" onclick="toggleMarkers()">Toggle Markers</button>
+  </div>
+  
+  <div class="legend">
+    <h4>Legend</h4>
+    <div class="legend-item">
+      <div class="legend-color tc-color"></div>
+      <span>Technology Centre</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color transport-color"></div>
+      <span>Transport Hub</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color campus-color"></div>
+      <span>Campus Buildings</span>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // SFU Campus Map Implementation
+    let map;
+    let markers = [];
+    let currentLayer = 'osm';
+    
+    // SFU Campus coordinates and locations
+    const SFU_CENTER = [49.2827, -122.9193]; // SFU Burnaby Campus center
+    const SFU_LOCATIONS = {
+      tc: {
+        name: "Technology Centre",
+        coordinates: [49.2815, -122.9205],
+        description: "The Technology Centre houses computer labs, research facilities, and technology services.",
+        building: "Technology Centre (TC)",
+        floors: "Multiple floors",
+        services: ["Computer Labs", "Research Facilities", "IT Services", "Study Areas"]
+      },
+      transport: {
+        name: "Transport Hub",
+        coordinates: [49.2835, -122.9185],
+        description: "Main transportation hub with bus stops, parking, and transit connections.",
+        building: "Transport Hub",
+        floors: "Ground level",
+        services: ["Bus Stops", "Parking", "Transit Info", "Accessibility Services"]
+      },
+      library: {
+        name: "W.A.C. Bennett Library",
+        coordinates: [49.2820, -122.9190],
+        description: "Main campus library with extensive collections and study spaces.",
+        building: "W.A.C. Bennett Library",
+        floors: "Multiple floors",
+        services: ["Study Areas", "Research Resources", "Computer Access", "Group Study Rooms"]
+      },
+      convocation: {
+        name: "Convocation Mall",
+        coordinates: [49.2825, -122.9195],
+        description: "Central gathering space for events and ceremonies.",
+        building: "Convocation Mall",
+        floors: "Outdoor space",
+        services: ["Event Space", "Ceremonies", "Gathering Area", "Food Services"]
+      },
+      aq: {
+        name: "Academic Quadrangle",
+        coordinates: [49.2818, -122.9200],
+        description: "Main academic buildings and classrooms.",
+        building: "Academic Quadrangle (AQ)",
+        floors: "Multiple buildings",
+        services: ["Classrooms", "Offices", "Study Areas", "Student Services"]
+      }
+    };
+    
+    // Initialize the map
+    function initMap() {
+      map = L.map('map', {
+        center: SFU_CENTER,
+        zoom: 17,
+        zoomControl: true
+      });
+      
+      // Add base layers
+      const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      });
+      
+      const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; Esri'
+      });
+      
+      const terrainLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenTopoMap'
+      });
+      
+      // Add default layer
+      osmLayer.addTo(map);
+      
+      // Store layers for switching
+      window.mapLayers = {
+        osm: osmLayer,
+        satellite: satelliteLayer,
+        terrain: terrainLayer
+      };
+      
+      // Add SFU locations
+      addSFULocations();
+      
+      // Add event listeners
+      setupEventListeners();
+    }
+    
+    // Add SFU locations to the map
+    function addSFULocations() {
+      Object.keys(SFU_LOCATIONS).forEach(key => {
+        const location = SFU_LOCATIONS[key];
+        
+        // Create custom icon based on location type
+        let iconColor, iconSize;
+        if (key === 'tc') {
+          iconColor = '#FF6B35';
+          iconSize = [30, 30];
+        } else if (key === 'transport') {
+          iconColor = '#4ECDC4';
+          iconSize = [30, 30];
+        } else {
+          iconColor = '#8B0000';
+          iconSize = [25, 25];
+        }
+        
+        const customIcon = L.divIcon({
+          className: 'custom-marker',
+          html: `<div style="
+            background-color: ${iconColor};
+            width: ${iconSize[0]}px;
+            height: ${iconSize[1]}px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+          ">${key === 'tc' ? 'TC' : key === 'transport' ? 'TH' : 'SFU'}</div>`,
+          iconSize: iconSize,
+          iconAnchor: [iconSize[0]/2, iconSize[1]/2]
+        });
+        
+        const marker = L.marker(location.coordinates, { icon: customIcon })
+          .addTo(map)
+          .bindPopup(createPopupContent(location), {
+            className: 'sfu-popup',
+            maxWidth: 300
+          });
+        
+        markers.push(marker);
+      });
+    }
+    
+    // Create popup content for locations
+    function createPopupContent(location) {
+      return `
+        <div class="sfu-popup">
+          <h3>${location.name}</h3>
+          <p><strong>Building:</strong> ${location.building}</p>
+          <p><strong>Description:</strong> ${location.description}</p>
+          <div class="building-info">
+            <p><strong>Floors:</strong> ${location.floors}</p>
+            <p><strong>Services:</strong></p>
+            <ul>
+              ${location.services.map(service => `<li>${service}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Setup event listeners
+    function setupEventListeners() {
+      // Zoom level control
+      document.getElementById('zoomLevel').addEventListener('input', function(e) {
+        map.setZoom(parseInt(e.target.value));
+      });
+      
+      // Layer selection
+      document.getElementById('layerSelect').addEventListener('change', function(e) {
+        switchLayer(e.target.value);
+      });
+      
+      // Map zoom change
+      map.on('zoomend', function() {
+        document.getElementById('zoomLevel').value = map.getZoom();
+      });
+    }
+    
+    // Switch map layers
+    function switchLayer(layerName) {
+      if (currentLayer === layerName) return;
+      
+      // Remove current layer
+      map.removeLayer(window.mapLayers[currentLayer]);
+      
+      // Add new layer
+      window.mapLayers[layerName].addTo(map);
+      currentLayer = layerName;
+    }
+    
+    // Center on SFU
+    function centerOnSFU() {
+      map.setView(SFU_CENTER, 17);
+    }
+    
+    // Show all locations
+    function showAllLocations() {
+      const group = new L.featureGroup(markers);
+      map.fitBounds(group.getBounds().pad(0.1));
+    }
+    
+    // Toggle markers visibility
+    function toggleMarkers() {
+      markers.forEach(marker => {
+        if (map.hasLayer(marker)) {
+          map.removeLayer(marker);
+        } else {
+          marker.addTo(map);
+        }
+      });
+    }
+    
+    // Initialize map when page loads
+    document.addEventListener('DOMContentLoaded', initMap);
+  </script>
+</body>
+</html>

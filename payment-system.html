@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SFU Carpool Payment System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    
+    .header h1 {
+      color: #2c3e50;
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #7f8c8d;
+      font-size: 1.1em;
+    }
+    
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .card h2 {
+      color: #2c3e50;
+      margin-bottom: 25px;
+      font-size: 1.5em;
+      border-bottom: 3px solid #3498db;
+      padding-bottom: 15px;
+    }
+    
+    .form-group {
+      margin-bottom: 25px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 10px;
+      color: #2c3e50;
+      font-weight: 600;
+      font-size: 1.1em;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #ecf0f1;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 10px rgba(52, 152, 219, 0.2);
+    }
+    
+    .btn {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin: 10px 5px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, #27ae60, #229954);
+    }
+    
+    .btn-warning {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+    
+    .btn-info {
+      background: linear-gradient(135deg, #17a2b8, #138496);
+    }
+    
+    .payment-calculator {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .calculation-display {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 15px 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .calculation-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 5px 0;
+    }
+    
+    .calculation-row.total {
+      border-top: 2px solid #3498db;
+      padding-top: 15px;
+      font-weight: 600;
+      font-size: 1.2em;
+      color: #2c3e50;
+    }
+    
+    .price-display {
+      font-size: 2em;
+      font-weight: bold;
+      color: #27ae60;
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    .payment-methods {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .payment-method {
+      border: 2px solid #ecf0f1;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .payment-method:hover {
+      border-color: #3498db;
+      transform: translateY(-2px);
+    }
+    
+    .payment-method.selected {
+      border-color: #3498db;
+      background: #e3f2fd;
+    }
+    
+    .payment-method-icon {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    
+    .transaction-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .transaction-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      margin-bottom: 10px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+    
+    .transaction-item:hover {
+      transform: translateY(-2px);
+    }
+    
+    .transaction-info {
+      flex: 1;
+    }
+    
+    .transaction-amount {
+      font-weight: 600;
+      font-size: 1.2em;
+      color: #27ae60;
+    }
+    
+    .transaction-status {
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: 600;
+      margin-left: 15px;
+    }
+    
+    .status-completed {
+      background: #27ae60;
+      color: white;
+    }
+    
+    .status-pending {
+      background: #f39c12;
+      color: white;
+    }
+    
+    .status-failed {
+      background: #e74c3c;
+      color: white;
+    }
+    
+    .status-refunded {
+      background: #17a2b8;
+      color: white;
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 30px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 5px;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      color: #7f8c8d;
+      font-weight: 600;
+    }
+    
+    .tab.active {
+      background: white;
+      color: #2c3e50;
+    }
+    
+    .route-map {
+      height: 300px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      margin: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #7f8c8d;
+      font-size: 1.2em;
+    }
+    
+    .pricing-tiers {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+    
+    .pricing-tier {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    .pricing-tier:hover {
+      transform: translateY(-5px);
+    }
+    
+    .tier-name {
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+    
+    .tier-price {
+      font-size: 2em;
+      font-weight: bold;
+      color: #3498db;
+      margin-bottom: 10px;
+    }
+    
+    .tier-description {
+      color: #7f8c8d;
+      font-size: 0.9em;
+    }
+    
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 10px;
+      color: white;
+      font-weight: 600;
+      z-index: 1000;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+    }
+    
+    .notification.show {
+      transform: translateX(0);
+    }
+    
+    .notification.success {
+      background: linear-gradient(135deg, #27ae60, #229954);
+    }
+    
+    .notification.error {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+    
+    .notification.info {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+    }
+    
+    @media (max-width: 768px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+      
+      .payment-methods {
+        grid-template-columns: 1fr;
+      }
+      
+      .pricing-tiers {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💳 SFU Carpool Payment System</h1>
+      <p>Per-kilometer pricing with automatic calculations and secure payments</p>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('calculate')">Calculate Payment</div>
+      <div class="tab" onclick="switchTab('pay')">Make Payment</div>
+      <div class="tab" onclick="switchTab('history')">Payment History</div>
+      <div class="tab" onclick="switchTab('earnings')">Driver Earnings</div>
+    </div>
+    
+    <div class="main-content">
+      <!-- Payment Calculator Section -->
+      <div class="card" id="calculateSection">
+        <h2>💰 Payment Calculator</h2>
+        
+        <form id="paymentCalculatorForm">
+          <div class="form-group">
+            <label for="fromLocation">From</label>
+            <input type="text" id="fromLocation" placeholder="Starting location" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="toLocation">To</label>
+            <input type="text" id="toLocation" placeholder="Destination" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="passengerCount">Number of Passengers</label>
+            <input type="number" id="passengerCount" min="1" max="8" value="1" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="rideType">Ride Type</label>
+            <select id="rideType" required>
+              <option value="standard">Standard Ride</option>
+              <option value="premium">Premium Ride</option>
+              <option value="shared">Shared Ride</option>
+            </select>
+          </div>
+          
+          <button type="submit" class="btn btn-success">Calculate Payment</button>
+        </form>
+        
+        <div class="payment-calculator" id="paymentCalculator" style="display: none;">
+          <h3>Payment Breakdown</h3>
+          <div class="calculation-display">
+            <div class="calculation-row">
+              <span>Distance:</span>
+              <span id="distanceDisplay">0 km</span>
+            </div>
+            <div class="calculation-row">
+              <span>Base Rate:</span>
+              <span id="baseRateDisplay">$0.00</span>
+            </div>
+            <div class="calculation-row">
+              <span>Passenger Count:</span>
+              <span id="passengerCountDisplay">1</span>
+            </div>
+            <div class="calculation-row">
+              <span>Ride Type Multiplier:</span>
+              <span id="multiplierDisplay">1.0x</span>
+            </div>
+            <div class="calculation-row">
+              <span>SFU Fee (5%):</span>
+              <span id="feeDisplay">$0.00</span>
+            </div>
+            <div class="calculation-row total">
+              <span>Total Amount:</span>
+              <span id="totalAmountDisplay">$0.00</span>
+            </div>
+          </div>
+          
+          <div class="price-display" id="priceDisplay">$0.00</div>
+        </div>
+        
+        <div class="route-map" id="routeMap">
+          🗺️ Route visualization will appear here
+        </div>
+      </div>
+      
+      <!-- Payment Methods Section -->
+      <div class="card" id="paySection" style="display: none;">
+        <h2>💳 Make Payment</h2>
+        
+        <div class="payment-methods">
+          <div class="payment-method" onclick="selectPaymentMethod('credit')">
+            <div class="payment-method-icon">💳</div>
+            <div>Credit Card</div>
+          </div>
+          <div class="payment-method" onclick="selectPaymentMethod('debit')">
+            <div class="payment-method-icon">🏦</div>
+            <div>Debit Card</div>
+          </div>
+          <div class="payment-method" onclick="selectPaymentMethod('paypal')">
+            <div class="payment-method-icon">🅿️</div>
+            <div>PayPal</div>
+          </div>
+          <div class="payment-method" onclick="selectPaymentMethod('interac')">
+            <div class="payment-method-icon">🇨🇦</div>
+            <div>Interac e-Transfer</div>
+          </div>
+        </div>
+        
+        <form id="paymentForm" style="display: none;">
+          <div class="form-group">
+            <label for="cardNumber">Card Number</label>
+            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+          </div>
+          
+          <div class="form-group">
+            <label for="expiryDate">Expiry Date</label>
+            <input type="text" id="expiryDate" placeholder="MM/YY" maxlength="5">
+          </div>
+          
+          <div class="form-group">
+            <label for="cvv">CVV</label>
+            <input type="text" id="cvv" placeholder="123" maxlength="4">
+          </div>
+          
+          <div class="form-group">
+            <label for="cardholderName">Cardholder Name</label>
+            <input type="text" id="cardholderName" placeholder="John Doe">
+          </div>
+          
+          <button type="submit" class="btn btn-success">Process Payment</button>
+        </form>
+        
+        <div id="paymentResult" style="display: none;">
+          <!-- Payment result will be displayed here -->
+        </div>
+      </div>
+      
+      <!-- Payment History Section -->
+      <div class="card" id="historySection" style="display: none;">
+        <h2>📊 Payment History</h2>
+        
+        <div class="transaction-list" id="transactionList">
+          <!-- Transaction history will be populated here -->
+        </div>
+        
+        <div class="form-group">
+          <label for="dateFilter">Filter by Date</label>
+          <input type="date" id="dateFilter" onchange="filterTransactions()">
+        </div>
+        
+        <div class="form-group">
+          <label for="statusFilter">Filter by Status</label>
+          <select id="statusFilter" onchange="filterTransactions()">
+            <option value="">All Statuses</option>
+            <option value="completed">Completed</option>
+            <option value="pending">Pending</option>
+            <option value="failed">Failed</option>
+            <option value="refunded">Refunded</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Driver Earnings Section -->
+      <div class="card" id="earningsSection" style="display: none;">
+        <h2>💰 Driver Earnings</h2>
+        
+        <div class="pricing-tiers">
+          <div class="pricing-tier">
+            <div class="tier-name">Standard Rate</div>
+            <div class="tier-price">$0.50/km</div>
+            <div class="tier-description">Base rate per kilometer</div>
+          </div>
+          <div class="pricing-tier">
+            <div class="tier-name">Premium Rate</div>
+            <div class="tier-price">$0.75/km</div>
+            <div class="tier-description">Premium service rate</div>
+          </div>
+          <div class="pricing-tier">
+            <div class="tier-name">Shared Rate</div>
+            <div class="tier-price">$0.35/km</div>
+            <div class="tier-description">Shared ride discount</div>
+          </div>
+        </div>
+        
+        <div class="calculation-display">
+          <h3>Earnings Summary</h3>
+          <div class="calculation-row">
+            <span>Total Distance Driven:</span>
+            <span id="totalDistance">0 km</span>
+          </div>
+          <div class="calculation-row">
+            <span>Total Rides:</span>
+            <span id="totalRides">0</span>
+          </div>
+          <div class="calculation-row">
+            <span>Gross Earnings:</span>
+            <span id="grossEarnings">$0.00</span>
+          </div>
+          <div class="calculation-row">
+            <span>SFU Fee (5%):</span>
+            <span id="sfuFee">$0.00</span>
+          </div>
+          <div class="calculation-row total">
+            <span>Net Earnings:</span>
+            <span id="netEarnings">$0.00</span>
+          </div>
+        </div>
+        
+        <div class="transaction-list" id="earningsList">
+          <!-- Earnings history will be populated here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Payment System
+    class PaymentSystem {
+      constructor() {
+        this.db = null;
+        this.currentUser = null;
+        this.selectedPaymentMethod = null;
+        this.pricingRates = {
+          standard: 0.50,
+          premium: 0.75,
+          shared: 0.35
+        };
+        this.sfuFeeRate = 0.05; // 5%
+        this.init();
+      }
+      
+      async init() {
+        await this.initDB();
+        await this.loadUserData();
+        this.setupEventListeners();
+        this.loadTransactions();
+        this.loadEarnings();
+      }
+      
+      async initDB() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open('PaymentSystemDB', 1);
+          
+          request.onerror = () => reject(request.error);
+          request.onsuccess = () => {
+            this.db = request.result;
+            resolve();
+          };
+          
+          request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            
+            // Transactions store
+            if (!db.objectStoreNames.contains('transactions')) {
+              const transactionStore = db.createObjectStore('transactions', { keyPath: 'id' });
+              transactionStore.createIndex('userId', 'userId');
+              transactionStore.createIndex('driverId', 'driverId');
+              transactionStore.createIndex('timestamp', 'timestamp');
+              transactionStore.createIndex('status', 'status');
+            }
+            
+            // Earnings store
+            if (!db.objectStoreNames.contains('earnings')) {
+              const earningsStore = db.createObjectStore('earnings', { keyPath: 'id' });
+              earningsStore.createIndex('driverId', 'driverId');
+              earningsStore.createIndex('timestamp', 'timestamp');
+            }
+            
+            // Users store
+            if (!db.objectStoreNames.contains('users')) {
+              const userStore = db.createObjectStore('users', { keyPath: 'id' });
+              userStore.createIndex('email', 'email', { unique: true });
+            }
+          };
+        });
+      }
+      
+      async loadUserData() {
+        const userData = localStorage.getItem('paymentUser');
+        if (userData) {
+          this.currentUser = JSON.parse(userData);
+        } else {
+          this.currentUser = {
+            id: 'user-' + Date.now(),
+            name: 'Demo User',
+            email: 'demo@sfu.ca',
+            role: 'passenger'
+          };
+          await this.saveUser(this.currentUser);
+        }
+      }
+      
+      setupEventListeners() {
+        // Payment calculator form
+        document.getElementById('paymentCalculatorForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.calculatePayment();
+        });
+        
+        // Payment form
+        document.getElementById('paymentForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.processPayment();
+        });
+        
+        // Card number formatting
+        document.getElementById('cardNumber').addEventListener('input', (e) => {
+          e.target.value = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
+        });
+        
+        // Expiry date formatting
+        document.getElementById('expiryDate').addEventListener('input', (e) => {
+          e.target.value = e.target.value.replace(/\D/g, '').replace(/(.{2})/, '$1/');
+        });
+      }
+      
+      async calculatePayment() {
+        const from = document.getElementById('fromLocation').value;
+        const to = document.getElementById('toLocation').value;
+        const passengerCount = parseInt(document.getElementById('passengerCount').value);
+        const rideType = document.getElementById('rideType').value;
+        
+        if (!from || !to) {
+          this.showNotification('Please enter both from and to locations', 'error');
+          return;
+        }
+        
+        // Calculate distance (simplified - in real app, use Google Maps API)
+        const distance = this.calculateDistance(from, to);
+        const baseRate = this.pricingRates[rideType];
+        const baseAmount = distance * baseRate;
+        const sfuFee = baseAmount * this.sfuFeeRate;
+        const totalAmount = baseAmount + sfuFee;
+        
+        // Update display
+        document.getElementById('distanceDisplay').textContent = `${distance.toFixed(2)} km`;
+        document.getElementById('baseRateDisplay').textContent = `$${baseAmount.toFixed(2)}`;
+        document.getElementById('passengerCountDisplay').textContent = passengerCount;
+        document.getElementById('multiplierDisplay').textContent = this.getMultiplierText(rideType);
+        document.getElementById('feeDisplay').textContent = `$${sfuFee.toFixed(2)}`;
+        document.getElementById('totalAmountDisplay').textContent = `$${totalAmount.toFixed(2)}`;
+        document.getElementById('priceDisplay').textContent = `$${totalAmount.toFixed(2)}`;
+        
+        document.getElementById('paymentCalculator').style.display = 'block';
+        
+        // Store calculation for payment
+        this.currentCalculation = {
+          from,
+          to,
+          distance,
+          passengerCount,
+          rideType,
+          baseAmount,
+          sfuFee,
+          totalAmount
+        };
+      }
+      
+      calculateDistance(from, to) {
+        // Simplified distance calculation
+        // In a real app, use Google Maps Distance Matrix API
+        const locations = {
+          'SFU Burnaby': { lat: 49.2827, lng: -122.9193 },
+          'SFU Surrey': { lat: 49.1867, lng: -122.8490 },
+          'SFU Vancouver': { lat: 49.2827, lng: -123.1207 },
+          'Downtown Vancouver': { lat: 49.2827, lng: -123.1207 },
+          'Metrotown': { lat: 49.2276, lng: -123.0076 },
+          'Richmond': { lat: 49.1666, lng: -123.1336 }
+        };
+        
+        // Simple distance calculation (not accurate, for demo purposes)
+        const baseDistance = 15; // km
+        const randomFactor = Math.random() * 10 + 5; // 5-15 km
+        return baseDistance + randomFactor;
+      }
+      
+      getMultiplierText(rideType) {
+        const multipliers = {
+          standard: '1.0x',
+          premium: '1.5x',
+          shared: '0.7x'
+        };
+        return multipliers[rideType];
+      }
+      
+      selectPaymentMethod(method) {
+        this.selectedPaymentMethod = method;
+        
+        // Remove previous selections
+        document.querySelectorAll('.payment-method').forEach(el => {
+          el.classList.remove('selected');
+        });
+        
+        // Add selection to clicked method
+        event.target.closest('.payment-method').classList.add('selected');
+        
+        // Show payment form
+        document.getElementById('paymentForm').style.display = 'block';
+      }
+      
+      async processPayment() {
+        if (!this.currentCalculation) {
+          this.showNotification('Please calculate payment first', 'error');
+          return;
+        }
+        
+        const cardNumber = document.getElementById('cardNumber').value;
+        const expiryDate = document.getElementById('expiryDate').value;
+        const cvv = document.getElementById('cvv').value;
+        const cardholderName = document.getElementById('cardholderName').value;
+        
+        if (!cardNumber || !expiryDate || !cvv || !cardholderName) {
+          this.showNotification('Please fill in all payment details', 'error');
+          return;
+        }
+        
+        // Simulate payment processing
+        const paymentResult = await this.simulatePayment({
+          cardNumber,
+          expiryDate,
+          cvv,
+          cardholderName,
+          amount: this.currentCalculation.totalAmount
+        });
+        
+        if (paymentResult.success) {
+          await this.saveTransaction({
+            id: 'txn-' + Date.now(),
+            userId: this.currentUser.id,
+            amount: this.currentCalculation.totalAmount,
+            distance: this.currentCalculation.distance,
+            from: this.currentCalculation.from,
+            to: this.currentCalculation.to,
+            passengerCount: this.currentCalculation.passengerCount,
+            rideType: this.currentCalculation.rideType,
+            paymentMethod: this.selectedPaymentMethod,
+            status: 'completed',
+            timestamp: new Date().toISOString(),
+            transactionId: paymentResult.transactionId
+          });
+          
+          this.showNotification('Payment processed successfully!', 'success');
+          this.loadTransactions();
+          this.resetPaymentForm();
+        } else {
+          this.showNotification('Payment failed: ' + paymentResult.error, 'error');
+        }
+      }
+      
+      async simulatePayment(paymentData) {
+        // Simulate payment processing delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Simulate 90% success rate
+        const success = Math.random() > 0.1;
+        
+        if (success) {
+          return {
+            success: true,
+            transactionId: 'TXN' + Date.now(),
+            message: 'Payment processed successfully'
+          };
+        } else {
+          return {
+            success: false,
+            error: 'Card declined or insufficient funds'
+          };
+        }
+      }
+      
+      async saveTransaction(transaction) {
+        return new Promise((resolve, reject) => {
+          const tx = this.db.transaction(['transactions'], 'readwrite');
+          const store = tx.objectStore('transactions');
+          const request = store.put(transaction);
+          
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async loadTransactions() {
+        const transactions = await this.getAllTransactions();
+        const transactionList = document.getElementById('transactionList');
+        transactionList.innerHTML = '';
+        
+        if (transactions.length === 0) {
+          transactionList.innerHTML = '<p>No transactions found.</p>';
+          return;
+        }
+        
+        transactions.forEach(transaction => {
+          const transactionElement = document.createElement('div');
+          transactionElement.className = 'transaction-item';
+          transactionElement.innerHTML = `
+            <div class="transaction-info">
+              <div style="font-weight: 600; color: #2c3e50;">${transaction.from} → ${transaction.to}</div>
+              <div style="color: #7f8c8d; font-size: 0.9em;">
+                ${transaction.distance.toFixed(2)} km • ${transaction.passengerCount} passenger${transaction.passengerCount > 1 ? 's' : ''} • ${transaction.rideType}
+              </div>
+              <div style="color: #7f8c8d; font-size: 0.9em;">
+                ${new Date(transaction.timestamp).toLocaleDateString()} at ${new Date(transaction.timestamp).toLocaleTimeString()}
+              </div>
+            </div>
+            <div class="transaction-amount">$${transaction.amount.toFixed(2)}</div>
+            <div class="transaction-status status-${transaction.status}">${transaction.status.toUpperCase()}</div>
+          `;
+          transactionList.appendChild(transactionElement);
+        });
+      }
+      
+      async loadEarnings() {
+        const earnings = await this.getAllEarnings();
+        const totalDistance = earnings.reduce((sum, earning) => sum + earning.distance, 0);
+        const totalRides = earnings.length;
+        const grossEarnings = earnings.reduce((sum, earning) => sum + earning.amount, 0);
+        const sfuFee = grossEarnings * this.sfuFeeRate;
+        const netEarnings = grossEarnings - sfuFee;
+        
+        document.getElementById('totalDistance').textContent = `${totalDistance.toFixed(2)} km`;
+        document.getElementById('totalRides').textContent = totalRides;
+        document.getElementById('grossEarnings').textContent = `$${grossEarnings.toFixed(2)}`;
+        document.getElementById('sfuFee').textContent = `$${sfuFee.toFixed(2)}`;
+        document.getElementById('netEarnings').textContent = `$${netEarnings.toFixed(2)}`;
+        
+        const earningsList = document.getElementById('earningsList');
+        earningsList.innerHTML = '';
+        
+        if (earnings.length === 0) {
+          earningsList.innerHTML = '<p>No earnings recorded yet.</p>';
+          return;
+        }
+        
+        earnings.forEach(earning => {
+          const earningElement = document.createElement('div');
+          earningElement.className = 'transaction-item';
+          earningElement.innerHTML = `
+            <div class="transaction-info">
+              <div style="font-weight: 600; color: #2c3e50;">${earning.from} → ${earning.to}</div>
+              <div style="color: #7f8c8d; font-size: 0.9em;">
+                ${earning.distance.toFixed(2)} km • ${earning.rideType} • ${earning.passengerCount} passenger${earning.passengerCount > 1 ? 's' : ''}
+              </div>
+              <div style="color: #7f8c8d; font-size: 0.9em;">
+                ${new Date(earning.timestamp).toLocaleDateString()}
+              </div>
+            </div>
+            <div class="transaction-amount">$${earning.amount.toFixed(2)}</div>
+          `;
+          earningsList.appendChild(earningElement);
+        });
+      }
+      
+      async getAllTransactions() {
+        return new Promise((resolve, reject) => {
+          const tx = this.db.transaction(['transactions'], 'readonly');
+          const store = tx.objectStore('transactions');
+          const request = store.getAll();
+          
+          request.onsuccess = () => resolve(request.result.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async getAllEarnings() {
+        return new Promise((resolve, reject) => {
+          const tx = this.db.transaction(['earnings'], 'readonly');
+          const store = tx.objectStore('earnings');
+          const request = store.getAll();
+          
+          request.onsuccess = () => resolve(request.result.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      async saveUser(user) {
+        return new Promise((resolve, reject) => {
+          const tx = this.db.transaction(['users'], 'readwrite');
+          const store = tx.objectStore('users');
+          const request = store.put(user);
+          
+          request.onsuccess = () => {
+            localStorage.setItem('paymentUser', JSON.stringify(user));
+            resolve();
+          };
+          request.onerror = () => reject(request.error);
+        });
+      }
+      
+      resetPaymentForm() {
+        document.getElementById('paymentForm').reset();
+        document.getElementById('paymentForm').style.display = 'none';
+        document.querySelectorAll('.payment-method').forEach(el => {
+          el.classList.remove('selected');
+        });
+        this.selectedPaymentMethod = null;
+        this.currentCalculation = null;
+      }
+      
+      showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.classList.add('show');
+        }, 100);
+        
+        setTimeout(() => {
+          notification.classList.remove('show');
+          setTimeout(() => notification.remove(), 300);
+        }, 3000);
+      }
+    }
+    
+    // Tab switching
+    function switchTab(tabName) {
+      // Hide all sections
+      document.querySelectorAll('.card').forEach(card => {
+        card.style.display = 'none';
+      });
+      
+      // Remove active class from all tabs
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Show selected section
+      if (tabName === 'calculate') {
+        document.getElementById('calculateSection').style.display = 'block';
+      } else if (tabName === 'pay') {
+        document.getElementById('paySection').style.display = 'block';
+      } else if (tabName === 'history') {
+        document.getElementById('historySection').style.display = 'block';
+      } else if (tabName === 'earnings') {
+        document.getElementById('earningsSection').style.display = 'block';
+      }
+      
+      // Add active class to clicked tab
+      event.target.classList.add('active');
+    }
+    
+    // Global functions
+    function selectPaymentMethod(method) {
+      paymentApp.selectPaymentMethod(method);
+    }
+    
+    function filterTransactions() {
+      // Filter functionality would be implemented here
+      paymentApp.loadTransactions();
+    }
+    
+    // Initialize the app
+    let paymentApp;
+    document.addEventListener('DOMContentLoaded', () => {
+      paymentApp = new PaymentSystem();
+    });
+  </script>
+</body>
+</html>
